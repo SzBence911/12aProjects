@@ -1,5 +1,12 @@
 #!python3
-"""GUI for the email client."""
+"""
+GUI for the email client.
+Edited by:
+Aron L. Hertendi: 
+	- class EmailGui: a scratch
+		^ methods: __init__, _delete_window, treeview_sort_column, tv_double, login, logout, eregister, refresh, sendMSG, delMSG
+...
+"""
 
 from tkinter import *
 import tkinter.ttk as ttk
