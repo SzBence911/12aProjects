@@ -3,8 +3,10 @@
 GUI for the email client.
 Edited by:
 Aron L. Hertendi: 
-	- class EmailGui: a scratch
-		^ methods: __init__, _delete_window, treeview_sort_column, tv_double, login, logout, eregister, refresh, sendMSG, delMSG
+	- class EmailGui: a sketch
+		^ methods: __init__, _delete_window, treeview_sort_column, tv_double, login, logout, eregister, refresh, sendMSG, delMSG, login_success, login_fail, logout_success
+	- class WriteLetter: a sketch
+		^ methods: __init__, send, end
 ...
 """
 
@@ -12,6 +14,7 @@ from tkinter import *
 import tkinter.ttk as ttk
 from tkinter import messagebox
 import socket,threading,time,os
+from datetime import datetime as dt
 
 class EmailGui(Frame):
 	"""Main dialog"""
@@ -29,7 +32,7 @@ class EmailGui(Frame):
 
 		# Objects #
 
-		self.b_Login = ttk.Button(self, text = "Login", command = self.login, state = NORMAL)
+		self.b_login = ttk.Button(self, text = "Login", command = self.login, state = NORMAL)
 		self.b_logout = ttk.Button(self, text = "Logout", command = self.logout, state = DISABLED)
 		self.b_register = ttk.Button(self, text = "Register", command = self.eregister, state = NORMAL)
 		self.b_refresh = ttk.Button(self, text = "Refresh", command = self.refresh, state = DISABLED)
@@ -56,7 +59,7 @@ class EmailGui(Frame):
 
 		# Grid #
 
-		self.b_Login.grid(row=0, column=1)
+		self.b_login.grid(row=0, column=1)
 		self.b_logout.grid(row=1, column=1)
 		self.b_register.grid(row=0, rowspan=2, column=2, ipady =20, padx=5)
 		self.b_refresh.grid(row=2, column=1,padx=5)
@@ -97,11 +100,11 @@ class EmailGui(Frame):
 
 	def login(self):
 		"login dialog"
-		pass
+		self.login_success() #for test
 
 	def logout(self):
 		"logout process"
-		pass
+		self.logout_success()
 
 	def eregister(self):
 		"registration dialog"
@@ -113,12 +116,95 @@ class EmailGui(Frame):
 
 	def sendMSG(self):
 		"Letter writing dialog"
-		pass
+		writing=WriteLetter(self)
 
 	def delMSG(self):
-		"Letter writing dialog"
+		"Letter deletion dialog"
 		pass
 
+	def login_success(self):
+		"actions to do on successful login #GUI"
+		self.b_send.config(state=NORMAL)
+		self.b_logout.config(state=NORMAL)
+		self.b_del.config(state=NORMAL)
+		self.b_refresh.config(state=NORMAL)
+		
+		self.b_login.config(state=DISABLED)
+		self.b_register.config(state=DISABLED)
+
+	def login_fail(self):
+		"actions to do on failed login attempt"
+		pass
+
+	def logout_success(self):
+		"actions to do on logout #GUI"
+		self.b_send.config(state=DISABLED)
+		self.b_logout.config(state=DISABLED)
+		self.b_del.config(state=DISABLED)
+		self.b_refresh.config(state=DISABLED)
+		
+		self.b_login.config(state=NORMAL)
+		self.b_register.config(state=NORMAL)
+
+
+class WriteLetter(Toplevel):
+	"""Toplevel window for email writing"""
+	def __init__(self,master):
+		Toplevel.__init__(self, master)
+		self.master = master
+		self.grab_set()
+		self.title("Send message")
+		self.geometry("+%d+%d" % (self.master.winfo_rootx()+50,
+                                  self.master.winfo_rooty()+50))
+		self.resizable(0,0)
+		self.transient(self.master)
+
+		# Objects
+		Label(self,text="Mail to:").grid(row=0, column=0, pady=5, sticky=NE)
+		Label(self,text="Subject:").grid(row=1, column=0, pady=5, sticky=NE)
+		Label(self,text="Mail:").grid(row=2, column=0, pady=5, sticky=NE)
+
+		self.e_Address=ttk.Entry(self, width=67)
+		self.e_Address.grid(row=0, column=1, pady=5)
+
+		self.e_Subject=ttk.Entry(self, width=67)
+		self.e_Subject.grid(row=1, column=1, pady=5)
+
+		self.textbox=Text(self, width=50)
+		self.textbox.grid(row=2, column=1, pady=10, padx=10,rowspan=10)
+
+		self.b_sendmail=ttk.Button(self, text="Send", width=7, command=self.send)
+		self.b_sendmail.grid(row=10, column=0,sticky=SE,padx=6)
+
+	def send(self):
+		"sending the letter after formally checked"
+		address=self.e_Address.get()
+		subject=self.e_Subject.get()
+		message=self.textbox.get(1.0,END)
+		date=str(dt.now())[5:10].replace("-",".")
+		#check address syntax
+		if "@" in address:
+			if "." in address.split("@")[1]:
+				if len(address.split("@")[1].split('.')[1])>0:
+					pass
+				else:messagebox.showinfo('Error', "Invalid address");return
+			else:messagebox.showinfo('Error', "Invalid address");return
+		else:messagebox.showinfo('Error', "Invalid address");return
+		#check Subject syntax: 1 word, 15 ch at max
+		if " " in subject or len(subject)>15:
+			messagebox.showinfo('Error', "Invalid subject")
+			return
+		elif subject=="":
+			cont = messagebox.askyesno('No subject', 'Are you sure you want to send this message without a subject specified?')
+			if not cont: return
+
+
+		#close window after the process, if succeeded, otherwise returned before with a messagebox description of what happened
+		self.end()
+
+	def end(self):
+		self.destroy()
+		
 
 if __name__ == '__main__':
 	root = EmailGui()
