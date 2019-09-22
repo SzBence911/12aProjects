@@ -1,22 +1,20 @@
-from database import *
 from crypting import *
 from socket import *
-from conn import *
 import threading
+import datetime
 
 connected = {}
 
 def newcon(c, addr,con):    #get connection type
     data = c.recv(1024)
-    if data[0:1] == "r":
-        register(data)
-    elif data[0:1] == "l":
-        loggingin(data)
-    else:
-        newcon(c,addr,con)
+    if data.split(';', 0) == "r":
+        registerin(data,c)
+    elif data.split(';', 0) == "l":
+        loggingin(data,c)
 
-def send(con): #If user want to send mail
-    receive(con)
+def send(con, mail): #If user want to send mail
+    mail = mail
+
 
 def receive(con): #If user have new mail and he logged in
     store(con)
@@ -24,14 +22,31 @@ def receive(con): #If user have new mail and he logged in
 def store(con): #Stone emails
     print("sucess")
 
-def logged(id, name): #Pin  user to connected dictionary
+def logged(id, name,c): #Pin  user to connected dictionary
     connected[id] = name
 
-def register(data): #Register user to the system using DB
-    data = data
+def registerin(data,c): #Register user to the system using DB
+    data = data.split(';', 2)
+    register(data[2], data[1])
+    loggingin(data[0]+ data[1]+data[2],c)
 
-def loggingin(data):    #Get datas from DB(Is user existed?)
-    data = data
+def loggingin(data,c):    #Get datas from DB(Is user existed?)
+    data = data.split(';', 2)
+    suc = login(data[2], data[1])
+    if suc == True:
+        count1 = 0
+        while True:
+            if count1 in connected.keys():
+                count1 += 1
+            else:
+                log(data[1] + " sikeresen bejelentkezett")
+                connected[count1] = data[1]
+                c.send(count1)
+                logged(count1, data[1],c)
+
+def log(s):  # logs
+    with open("logs/" + datetime.datetime.now().strftime("%Y.%m.%d") + "-console-log.log",encoding="utf-8", mode="a") as f:
+        f.write(s + "\n")
 
 s = socket.socket()  # Create a socket object
 host = socket.gethostname()  # Get local machine name
