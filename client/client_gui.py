@@ -4,7 +4,7 @@ GUI for the email client.
 Edited by:
 Aron L. Hertendi: 
 	- class EmailGui: a frame where you can read, refresh, delete e-mails or log out
-		^ methods: __init__, load_mails, treeview_sort_column, tv_double, logout, delMSG
+		^ methods: __init__, load_mails, treeview_sort_column, treeview_double_click, logout, delMSG
 	- class WriteLetterDialog: a frame for email editing
 		^ methods: __init__, send, end, checkInvalidCh
 	- class AuthenticationDialog: a frame for logging in or creating new account
@@ -21,31 +21,27 @@ import socket,threading,time,os
 from datetime import datetime as dt
 
 class EmailGui(Frame):
-	"""Main dialog"""
-	def __init__(self, master,user):
+	def __init__(self, master, user):
 		Frame.__init__(self, master)
 		self.master = master
 		self.user = user
 
-		######
-
+		# Create the widgets
 		self.b_logout = ttk.Button(self, text = "Logout", command = self.logout, state = NORMAL)
 		self.b_refresh = ttk.Button(self, text = "Refresh", command = self.load_mails, state = NORMAL)
-		self.b_send = ttk.Button(self, text = "Send new", command = self.master.write_letter, state = NORMAL)
-		self.b_del = ttk.Button(self, text = "Delete", command = self.delMSG, state = NORMAL)
+		self.b_write_mail = ttk.Button(self, text = "Send new", command = self.master.write_letter, state = NORMAL)
+		self.b_delete_mail = ttk.Button(self, text = "Delete", command = self.delMSG, state = NORMAL)
 
-		self.tv = ttk.Treeview(self, columns=("From", "Subject", "Date", "Read"), show="headings")
+		self.mail_treeview = ttk.Treeview(self, columns=("From", "Subject", "Date", "Read"), show="headings")
 
 		# Treeview costumize
-
-		for x in self.tv["columns"]:
-			self.tv.heading(x, text=x, command=lambda _col=x: self.treeview_sort_column(self.tv, _col, True), anchor=N)
-		self.tv.column("Date", width=70)
-		self.tv.column("Read", width=70)
-
+		for x in self.mail_treeview["columns"]:
+			self.mail_treeview.heading(x, text=x, command=lambda _col=x: self.treeview_sort_column(self.mail_treeview, _col, True), anchor=N)
+		self.mail_treeview.column("Date", width=70)
+		self.mail_treeview.column("Read", width=70)
 
 		# Bindings #
-		self.tv.bind("<Double-1>", self.tv_double) #double click to read an email
+		self.mail_treeview.bind("<Double-1>", self.treeview_double_click) #double click to read an email
 
 		# Manage Mails #
 		self.mails=[]
@@ -54,48 +50,48 @@ class EmailGui(Frame):
 		# Grid #
 		self.b_logout.grid(row=1, column=1)
 		self.b_refresh.grid(row=2, column=1,padx=5)
-		self.b_send.grid(row=3, column=1, padx=5)
-		self.b_del.grid(row=4, column=1, padx=5)
-		self.tv.grid(row=0, rowspan=10, column=0)
+		self.b_write_mail.grid(row=3, column=1, padx=5)
+		self.b_delete_mail.grid(row=4, column=1, padx=5)
+		self.mail_treeview.grid(row=0, rowspan=10, column=0)
 
 		
 
 	def load_mails(self):											#FROMSERVER
-		self.tv.delete(*self.tv.get_children())
+		self.mail_treeview.delete(*self.mail_treeview.get_children())
 		self.mail_count=0
 		with open("{0}.txt".format(self.user), 'a') as f:pass
 		with open("{0}.txt".format(self.user), 'r') as f:
 			self.mails=[x[:-1] for x in f.readlines()]
 		for x in self.mails:
 			x=x.split()
-			self.tv.insert("" , self.mail_count, values=(x[0].replace("[kukac]","@"), x[1],x[2], x[3]), text=str(self.mail_count))
+			self.mail_treeview.insert("" , self.mail_count, values=(x[0].replace("[kukac]","@"), x[1],x[2], x[3]), text=str(self.mail_count))
 
-	def treeview_sort_column(self,tv, col, reverse):
+	def treeview_sort_column(self,mail_treeview, col, reverse):
 		"function to sort letters by col - thx stackoverflow"
-		l = [(tv.set(k, col), k) for k in self.tv.get_children('')]
+		l = [(mail_treeview.set(k, col), k) for k in self.mail_treeview.get_children('')]
 		l.sort(reverse=reverse)
 
 		# rearrange items in sorted positions
 		for index, (val, k) in enumerate(l):
-			tv.move(k, '', index)
+			mail_treeview.move(k, '', index)
 
 		# reverse sort next time
-		tv.heading(col, command=lambda: \
-					self.treeview_sort_column(self.tv, col, not reverse))
+		mail_treeview.heading(col, command=lambda: \
+					self.treeview_sort_column(self.mail_treeview, col, not reverse))
 
-	def tv_double(self,event):								#TOSERVER
-		item =self.tv.identify('item',event.x,event.y)
-		if self.tv.item(item,"values"):
-			i = int(self.tv.item(self.tv.focus())["text"])
-			self.mails[i]=self.mails[i].replace("olvasatlan", "olvasott")
+	def treeview_double_click(self,event):								#TOSERVER
+		item = self.mail_treeview.identify('item',event.x,event.y)
+		if self.mail_treeview.item(item,"values"):
+			i = int(self.mail_treeview.item(self.mail_treeview.focus())["text"])
+			self.mails[i] = self.mails[i].replace("olvasatlan", "olvasott")
 			with open("{0}.txt".format(self.user), 'w') as f:
 				for x in self.mails:
 					f.write(x+"\n")
 			self.load_mails()
 			mail=self.mails[i][self.mails[i].find("{")+1:-1]
-			attr=self.mails[i].split()
-			ShowLetter(self, attr[0].replace("[kukac]","@"),attr[1], mail, attr[2])
-			# will read email based on the id in self.tv.item(item, "text")
+			mail_attr=self.mails[i].split()
+			ShowLetter(self, mail_attr[0].replace("[kukac]","@"),mail_attr[1], mail, mail_attr[2])
+			# will read email based on the id in self.mail_treeview.item(item, "text")
 			# which means on the server side the email is considered read, and on successful read, we refresh this property on client-side
 
 	def logout(self):
@@ -106,18 +102,18 @@ class EmailGui(Frame):
 
 	def delMSG(self):							#TOSERVER
 		"Letter deletion dialog"
-		focus=self.tv.focus()
+		focus=self.mail_treeview.focus()
 		if not focus:return
 		cont = messagebox.askyesno('Delete', 'Are you sure you want to delete the selected message?')
 		if not cont: return
 		#index of letter to be deleted in stored self.mails
-		i=int(self.tv.item(focus)["text"])
+		i=int(self.mail_treeview.item(focus)["text"])
 		del self.mails[i]
 		with open("{0}.txt".format(self.user), 'w') as f:
 			for x in self.mails:
 				f.write(x+"\n")
 
-		self.tv.delete(focus)
+		self.mail_treeview.delete(focus)
 
 
 class ShowLetter(Toplevel):
@@ -128,9 +124,9 @@ class ShowLetter(Toplevel):
 		self.sender = sender
 		self.subject = subject
 		self.message = message
-		self.date=date
+		self.date = date
 		self.title("Email")
-		Label(self,text="From: %s\nSubject: %s\n\nMessage:\n%s\n\n%s"%(sender,subject,message,date), justify=LEFT).grid()
+		Label(self,text="From: %s\nSubject: %s\n\nMessage:\n%s\n\n%s"%(sender, subject, message, date), justify=LEFT).grid()
 		self.update_idletasks()
 		self.geometry("+%d+%d" % (self.master.winfo_screenwidth()/2-(self.master.winfo_reqwidth()/2),
                                   self.master.winfo_screenheight()/2-(self.master.winfo_reqheight()/2)-75))
@@ -141,9 +137,9 @@ class WriteLetterDialog(Frame):
 	def __init__(self,master,user):
 		Frame.__init__(self, master)
 		self.master = master
-		self.user=user
+		self.user = user
 
-		# Objects
+		# Widgets
 
 		Label(self,text="Mail to:").grid(row=0, column=0, pady=5, sticky=NE)
 		Label(self,text="Subject:").grid(row=1, column=0, pady=5, sticky=NE)
@@ -191,7 +187,7 @@ class WriteLetterDialog(Frame):
 			else: subject = "nincs_megadva"   #this would be more proper to be on server side
 
 		with open("{0}.txt".format(address[:-9]), 'a') as f:
-			f.write(address.replace("@","[kukac]")+" "+subject+" "+date+" olvasatlan "+"{"+message+"}\n")
+			f.write(self.user+"@dusza.hu "+subject+" "+date+" olvasatlan "+"{"+message+"}\n")
 
 		messagebox.showinfo('Success', "Email sent!")
 		#close window after the process, if succeeded, otherwise returned before with a messagebox description of what happened
@@ -213,7 +209,7 @@ class AuthenticationDialog(Frame):
 		Frame.__init__(self, master)
 		self.master = master
 
-		# widgets #
+		# Widgets #
 		self.e_user = ttk.Entry(self, width=19)
 		self.e_password = ttk.Entry(self,show="☺", width=30)
 		self.b_reminder = ttk.Button(self, text = "Remind me!", command = self.reminder, width=15, state=NORMAL)
@@ -266,7 +262,7 @@ class AuthenticationDialog(Frame):
 		"registration check"
 		data = self.get_data()
 
-		ERROR_MSG=(\
+		ERROR_MSG = (\
 """Username, password and the password reminder all the same, may not contain spaces and may only contain numbers or letters from the English alphabet.
 Password length is 8 to 10. Username and password reminder length is 1 to 15.""")
 
@@ -309,7 +305,7 @@ Password length is 8 to 10. Username and password reminder length is 1 to 15."""
 
 
 	def hasher(self,password):				#ONSERVER?
-		return sum([ord(x) for x in password+"d"*(10-len(password))])
+		return sum([ord(x) for x in password + "d" * (10 - len(password))])
 		
 	def checkInvalidCh(self, string_):
 		"checks for invalid chars in username/pass/reminder"			#should probably have used regex here,w/e works fine
@@ -321,8 +317,8 @@ Password length is 8 to 10. Username and password reminder length is 1 to 15."""
 
 	def login(self):			#by server approve
 		"login data check"
-		data=self.get_data()
-		user=self.e_user.get()
+		data = self.get_data()
+		user = self.e_user.get()
 		if user not in data:
 			messagebox.showinfo('Error', "Incorrect username.")
 			self.e_user.delete(0,END)
@@ -338,8 +334,8 @@ Password length is 8 to 10. Username and password reminder length is 1 to 15."""
 		self.master.login_success(user)
 
 	def reminder(self):			#FROMSERVER
-		data=self.get_data()
-		user=self.e_user.get()
+		data = self.get_data()
+		user  =self.e_user.get()
 		if user not in data:
 			messagebox.showinfo('Password reminder', "No such username in the registry.")
 			return
