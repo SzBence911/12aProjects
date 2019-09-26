@@ -2,7 +2,7 @@
 """
 Main root for the client, managing switching in-between the different interfaces of the client: 
 		login - read - write
-Missing commincation with the server.
+Missing Communication with the server.
 """
 from tkinter import *
 import tkinter.ttk as ttk
@@ -31,7 +31,7 @@ class EmailClient(Frame):
 		self.data[2].set(name)
 		self.connect()
 		if self.connected:
-			self.c=Commincation(self.connection,self)
+			self.c=Communication(self.connection,self)
 			self.c.start()
 
 		#start
@@ -98,8 +98,8 @@ class EmailClient(Frame):
 			self.connected=False
 			return
 
-class Commincation(threading.Thread):
-	"""docstring for Commincation"""
+class Communication(threading.Thread):
+	"""docstring for Communication"""
 	def __init__(self, conn, root):
 		threading.Thread.__init__(self)
 		self.conn = conn
