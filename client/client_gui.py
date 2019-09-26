@@ -12,6 +12,8 @@ Aron L. Hertendi:
 	- class Showletter: Toplevel window describing a double-clicked letter
 ...MISSING:
 	^ online version.
+...Known bugs:
+	^ App showing other mail than the one that was clicked.
 """
 
 from tkinter import *
@@ -21,6 +23,15 @@ import socket,threading,time,os
 from datetime import datetime as dt
 
 class EmailGui(Frame):
+	"""
+		A Frame class which let's the successfully logged in user to browse, sort, delete and initiate writing e-mails.
+		NOTE: This frame does not displays itself on it's master upon init.
+			Methods:
+				__init__:
+					- creating, costumizing and showing widgets
+					- loading the user's incoming e-mails
+					- adding bindings
+	"""
 	def __init__(self, master, user):
 		Frame.__init__(self, master)
 		self.master = master
@@ -67,7 +78,7 @@ class EmailGui(Frame):
 			self.mail_treeview.insert("" , self.mail_count, values=(x[0].replace("[kukac]","@"), x[1],x[2], x[3]), text=str(self.mail_count))
 
 	def treeview_sort_column(self,mail_treeview, col, reverse):
-		"function to sort letters by col - thx stackoverflow"
+		"function to sort letters when a column is selected to be sorted by - thx stackoverflow"
 		l = [(mail_treeview.set(k, col), k) for k in self.mail_treeview.get_children('')]
 		l.sort(reverse=reverse)
 
@@ -80,6 +91,7 @@ class EmailGui(Frame):
 					self.treeview_sort_column(self.mail_treeview, col, not reverse))
 
 	def treeview_double_click(self,event):								#TOSERVER
+		"function binded to double clicking, detecting which mail was chosen, forwarding it to class ShowLetter"
 		item = self.mail_treeview.identify('item',event.x,event.y)
 		if self.mail_treeview.item(item,"values"):
 			i = int(self.mail_treeview.item(self.mail_treeview.focus())["text"])
@@ -117,7 +129,7 @@ class EmailGui(Frame):
 
 
 class ShowLetter(Toplevel):
-	"""docstring for ShowLetter"""
+	"""Toplevel class for displaying mails."""
 	def __init__(self, master,sender,subject,message,date):
 		Toplevel.__init__(self,master)
 		self.master = master
@@ -133,7 +145,10 @@ class ShowLetter(Toplevel):
 		
 
 class WriteLetterDialog(Frame):
-	"""Frame window for email writing"""
+	"""
+		A Frame class containing the mail writing dialog.
+		NOTE: This frame does not displays itself on it's master upon init.
+	"""
 	def __init__(self,master,user):
 		Frame.__init__(self, master)
 		self.master = master
@@ -204,7 +219,19 @@ class WriteLetterDialog(Frame):
 		self.master.send_over()
 
 class AuthenticationDialog(Frame):
-	"""class for logging in or applying a registration"""
+	"""
+		A Frame containing dialog for logging in or applying a registration.
+		NOTE: This frame does not displays itself on it's master upon init.
+			Methods:
+				__init__:
+					- inicializing widgets
+					- saving the valid characters to be used in different functions
+				
+				get_data:
+					- loads any existing user from file into var named data
+
+
+	"""
 	def __init__(self, master):
 		Frame.__init__(self, master)
 		self.master = master
@@ -248,6 +275,7 @@ class AuthenticationDialog(Frame):
 		#self.grid()
 
 	def get_data(self):			#FROMSERVER
+		"Importing existing users from file."
 		data = {}
 		with open('adatok.txt', 'a') as f: pass #make sure it exists
 		with open('adatok.txt', 'r') as f:
