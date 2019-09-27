@@ -147,8 +147,20 @@ class ShowLetter(Toplevel):
 class WriteLetterDialog(Frame):
 	"""
 		A Frame class containing the mail writing dialog.
-		NOTE: This frame does not displays itself on it's master upon init.
-	"""
+		NOTE: This frame does not displays itself on it's master upon init, but does destroy self on send or back action.
+			Methods:
+				__init__:
+					- inicializing widgets
+					- saving the valid characters to be used in different functions
+				send:
+					- getting the inputs from the form
+					- verifying correct the correct mail formulas
+					- sending out the mail (to txt file)
+				checkInvalidCh:
+					- checks for invalid chars
+				end:
+					- destroys self, notifies/calls master's send_over method
+				"""
 	def __init__(self,master,user):
 		Frame.__init__(self, master)
 		self.master = master
@@ -185,7 +197,7 @@ class WriteLetterDialog(Frame):
 		message=self.textbox.get(1.0,END)[:-1]
 		date=str(dt.now())[5:10].replace("-",".")+"."
 		#check address syntax
-		if "@" in address:
+		if "@" in address or not self.checkInvalidCh(address):
 			if "." in address.split("@")[1]:
 				if len(address.split("@")[1].split('.')[1])>0:
 					pass
@@ -226,11 +238,19 @@ class AuthenticationDialog(Frame):
 				__init__:
 					- inicializing widgets
 					- saving the valid characters to be used in different functions
-				
 				get_data:
 					- loads any existing user from file into var named data
-
-
+				eregister:
+					- collect data from registration dialog, check conditions, verify
+					- save new acc to txt file
+				hasher:
+					- hashes the password up successful registration
+				checkInvalidCh:
+					- checks for invalid chars
+				login:
+					- login dialog, gathers data, notifies master on successful login by master's login_success method
+				reminder:
+					- displays a password reminder that was optionally set for the username
 	"""
 	def __init__(self, master):
 		Frame.__init__(self, master)
@@ -362,6 +382,7 @@ Password length is 8 to 10. Username and password reminder length is 1 to 15."""
 		self.master.login_success(user)
 
 	def reminder(self):			#FROMSERVER
+		"Shows the password reminder if was set."
 		data = self.get_data()
 		user  =self.e_user.get()
 		if user not in data:
