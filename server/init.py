@@ -19,16 +19,21 @@ def newcon(c, addr):    #get connection type
         loggingin(spliter,c)
 
 def send(c,id): #If user want to send mail
-    c.send("1")
+    c.send(b';c;')
     out = 0
     while True:
         data = c.recv(2048) #256 char buffer
-        if data is not None:
+        if data is not None and str(data) != "b''":
+            print(data)
+            data = str(data)
+            data = data.split(";")
             ret = False
             integ = -1
+            createtb("mails",connected[id])
             while ret != True:
                 integ += 1
                 ret = createln("mails",connected[id],str(integ))
+            writetoln("mails", connected[id],str(integ), data[1])
         else:
             out += 1
         if out > 10:
@@ -39,16 +44,19 @@ def receive(c): #If user have new mail and he logged in
         c.send()
 
 def logged(id, name,c): #Pin  user to connected dictionary
-    if id in connected.keys():
         while True:
             try:
-                data = c.recv(40)
+                data = c.recv(128)
             except:
                 data = False
-            if data != False:
+            if data != False and str(data) != "b''":
+                print(str(data))
                 data = str(data)
+                data = data.split(';')
+                print(data)
                 if data[1] == "s":
                     idtimer[id] = 0
+                    print("sendprob")
                     send(c,id)
                 elif data[1] == "r":
                     idtimer[id] = 0
@@ -68,11 +76,11 @@ def loggingin(data,c):    #Get datas from DB(Is user existed?
             if count1 in connected.keys():
                 count1 += 1
             else:
-                log(data[1] + " sikeresen bejelentkezett")
-                connected[count1] = data[1]
+                log(data[2] + " sikeresen bejelentkezett")
+                connected[count1] = data[2]
                 idtimer[count1] = 0
                 c.send(bytes(count1))
-                logged(count1, data[1],c)
+                logged(count1, data[2],c)
 
 def log(s):  # logs
     with open("logs/" + datetime.datetime.now().strftime("%Y.%m.%d") + "-console-log.log",encoding="utf-8", mode="a") as f:
