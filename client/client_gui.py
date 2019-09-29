@@ -330,7 +330,7 @@ Password length is 8 to 10. Username and password reminder length is 1 to 15."""
 		if len(newUser)>15 or not newUser or ' ' in newUser:
 			messagebox.showinfo('Error', ERROR_MSG)
 			return
-		if len(newReminder)>15 or not newReminder or ' ' in newReminder:
+		if len(newReminder)>15 or ' ' in newReminder:
 			messagebox.showinfo('Error', ERROR_MSG)
 			return
 
@@ -348,6 +348,7 @@ Password length is 8 to 10. Username and password reminder length is 1 to 15."""
 			messagebox.showinfo('Error', ERROR_MSG)
 			return
 
+		if not newReminder: newReminder="#"
 		# The data can be saved!
 		with open('adatok.txt', 'a') as f:
 			f.write("{0} {1} {2}\n".format(newUser, self.hasher(newPass), newReminder))
@@ -391,12 +392,12 @@ Password length is 8 to 10. Username and password reminder length is 1 to 15."""
 	def reminder(self):			#FROMSERVER
 		"Shows the password reminder if was set."
 		data = self.get_data()
-		user  =self.e_user.get()
+		user = self.e_user.get()
 		if user not in data:
 			messagebox.showinfo('Password reminder', "No such username in the registry.")
 			return
 		else:
-			if len(data[user])==2:
+			if data[user][1]!="#":
 				messagebox.showinfo('Password reminder', "Your password reminder is:\n{0}".format(data[user][1]))
 			else:
 				messagebox.showinfo('Password reminder', "You have no password reminder! :(")
