@@ -108,7 +108,7 @@ class EmailGui(Frame):
 			self.load_mails()
 			mail=self.mails[i][self.mails[i].find("{")+1:-1]
 			mail_attr=self.mails[i].split()
-			ShowLetter(self, mail_attr[0].replace("[kukac]","@"),mail_attr[1], mail, mail_attr[2])
+			ShowLetter(self, mail_attr[0].replace("[kukac]","@"),mail_attr[1], mail.replace("#[!n]","\n"), mail_attr[2])
 			# will read email based on the id in self.mail_treeview.item(item, "text")
 			# which means on the server side the email is considered read, and on successful read, we refresh this property on client-side
 
@@ -200,7 +200,7 @@ class WriteLetterDialog(Frame):
 		"sending the letter after formally checked"
 		address=self.e_Address.get()
 		subject=self.e_Subject.get()
-		message=self.textbox.get(1.0,END)[:-1]
+		message=self.textbox.get(1.0,END)[:-1].replace("\n", "#[!n]")
 		date=str(dt.now())[5:10].replace("-",".")+"."
 		#check address syntax
 		if "@" in address or not self.checkInvalidCh(address):
