@@ -18,6 +18,8 @@ def login(jelsz, user):         # Login case
         return False
 
 def register(jelsz, user):      # reg thread
+    print(createln("Users", "useraut", "usrnm"))
+    print(createln("Users", "useraut", "usrpass"))
     regdat = validreg(user)     # Is it a valid user?
     print(str(regdat) + " regdat")
     try:
@@ -25,8 +27,6 @@ def register(jelsz, user):      # reg thread
             salt = "sajtoscsirke"
             hash = hashlib.sha512(salt.encode('utf-8') + user.encode('utf-8') + jelsz.encode('utf-8')).hexdigest()
             hash = str(hash)
-            print(createln("Users", "useraut", "usrnm"))
-            print(createln("Users", "useraut", "usrpass"))
             writetoln("Users", "useraut", "usrnm", user)
             writetoln("Users", "useraut", "usrpass", hash)
             print("Sikeres regisztrácio " + user)

@@ -96,8 +96,8 @@ def shfromlnit(dbname, tbname, name, integ): #Search with int
                 return True
             else:
                 return False
-    except:
-        return "Error in shfromlnit"
+    except Exception as e:
+        return e
 
 def getfrln(dbname, tbname, name):
     path = 'database/' + dbname + '/' + tbname + '/' + name
