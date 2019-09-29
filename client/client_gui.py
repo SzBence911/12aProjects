@@ -17,7 +17,7 @@ Aron L. Hertendi:
 ...MISSING:
 	^ online version.
 ...Known bugs:
-	^ App showing other mail than the one that was clicked.
+	^ clean atm
 """
 
 from tkinter import *
@@ -48,7 +48,7 @@ class EmailGui(Frame):
 		self.b_delete_mail = ttk.Button(self, text = "Delete", command = self.delMSG, state = NORMAL)
 
 		self.mail_treeview = ttk.Treeview(self, columns=("From", "Subject", "Date", "Read"), show="headings")
-
+		self.sort=None
 		# Treeview costumize
 		for x in self.mail_treeview["columns"]:
 			self.mail_treeview.heading(x, text=x, command=lambda _col=x: self.treeview_sort_column(self.mail_treeview, _col, True), anchor=N)
@@ -81,12 +81,16 @@ class EmailGui(Frame):
 		for x in self.mails:
 			x=x.split()
 			self.mail_treeview.insert("" , self.mail_count, values=(x[0].replace("[kukac]","@"), x[1],x[2], x[3]), text=str(self.mail_count))
+			self.mail_count+=1
+		if self.sort:
+			self.treeview_sort_column(self.mail_treeview, *self.sort)
 
 	def treeview_sort_column(self,mail_treeview, col, reverse):
 		"f(panel: ttk.Treeview, sorting column id, reverse: bool)\nFunction to sort letters when a column is selected to be sorted by - thx stackoverflow"
 		l = [(mail_treeview.set(k, col), k) for k in self.mail_treeview.get_children('')]
 		l.sort(reverse=reverse)
-
+		print(l)
+		self.sort=[col, reverse]
 		# rearrange items in sorted positions
 		for index, (val, k) in enumerate(l):
 			mail_treeview.move(k, '', index)

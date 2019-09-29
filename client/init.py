@@ -4,6 +4,7 @@ Main root for the client, managing switching in-between the different interfaces
 		login - read - write
 Run offline:
 	cmd: python3 init.py offline
+Classes: EmailClient, Communication
 Missing Communication with the server.
 """
 from tkinter import *
