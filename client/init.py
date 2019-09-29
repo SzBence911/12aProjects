@@ -2,6 +2,8 @@
 """
 Main root for the client, managing switching in-between the different interfaces of the client: 
 		login - read - write
+Run offline:
+	cmd: python3 init.py offline
 Missing Communication with the server.
 """
 from tkinter import *
@@ -13,12 +15,17 @@ from datetime import datetime as dt
 from client_gui import EmailGui, WriteLetterDialog, AuthenticationDialog, ShowLetter
 
 class EmailClient(Frame):
-	"""docstring for EmailClient"""
-	def __init__(self, host, port, name):
+	"""
+	Class(host:id/ip, port:n, name:id)
+	Main modul of client.
+	Redirection between interfaces."""
+	def __init__(self, host, port, name, online):
 		Frame.__init__(self)
+		self.online=online
 		self.master.resizable(0,0)
 		self.master.protocol("WM_DELETE_WINDOW", self._delete_window)
 		self.center_window()
+		self.connected=False
 		#self.master.attributes('-fullscreen', True)
 
 		# Widgets #
@@ -29,7 +36,8 @@ class EmailClient(Frame):
 		self.data[0].set(host)
 		self.data[1].set(port)
 		self.data[2].set(name)
-		self.connect()
+		if online:
+			self.connect()
 		if self.connected:
 			self.c=Communication(self.connection,self)
 			self.c.start()
@@ -52,12 +60,14 @@ class EmailClient(Frame):
 			self.master.destroy()
 
 	def center_window(self):
+		"center the window."
 		self.master.update_idletasks()
 		self.master.geometry("+%d+%d" % (self.master.winfo_screenwidth()/2-(self.master.winfo_reqwidth()/2),
                                   self.master.winfo_screenheight()/2-(self.master.winfo_reqheight()/2)-75))
 
 
 	def login_success(self, user):
+		"f(user)"
 		self.master.title('Email-client')
 		self.auth.grid_forget()
 		self.user = user
@@ -66,11 +76,13 @@ class EmailClient(Frame):
 		self.center_window()
 
 	def logout(self):
+		"Users auth-ed mail frame has destroyed self." #prolly thats not the right way tho
 		self.auth.grid()
 		self.master.title('Login or register')
 		self.center_window()
 		
 	def write_letter(self):
+		"Go to writing dialog."
 		self.client.grid_forget()
 		self.master.title('Send new message')
 		self.send = WriteLetterDialog(self, self.user)
@@ -78,6 +90,7 @@ class EmailClient(Frame):
 		self.center_window()
 
 	def send_over(self):
+		"Get back to (re-grid) incoming mails, when the writing dialog is closed."
 		self.master.title('Email-client')
 		self.client.grid()
 		self.center_window()
@@ -114,8 +127,13 @@ class Communication(threading.Thread):
 		
 
 if __name__ == '__main__':
+	import sys
+	online=True
+	print(sys.argv)
+	if len(sys.argv)>1 and sys.argv[1]=="offline":
+		online=False
 	host = socket.gethostname()  # Get local machine name
 	port = 50000  # Reserve a port for your service.
 	name = os.environ['COMPUTERNAME']+'\\'+getpass.getuser() # log in with username
-	root=EmailClient(host, port, name)
+	root=EmailClient(host, port, name, online)
 	root.mainloop()

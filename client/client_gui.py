@@ -18,7 +18,6 @@ Aron L. Hertendi:
 	^ online version.
 ...Known bugs:
 	^ App showing other mail than the one that was clicked.
-	^ Long mails
 """
 
 from tkinter import *
