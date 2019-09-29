@@ -4,16 +4,22 @@ GUI for the email client.
 Edited by:
 Aron L. Hertendi: 
 	- class EmailGui: a frame where you can read, refresh, delete e-mails or log out
+		^ params: master, user
 		^ methods: __init__, load_mails, treeview_sort_column, treeview_double_click, logout, delMSG
 	- class WriteLetterDialog: a frame for email editing
+		^ params: master, user
 		^ methods: __init__, send, end, checkInvalidCh
 	- class AuthenticationDialog: a frame for logging in or creating new account
+		^ params: master
 		^ methods: __init__, get_data, eregister, hasher, checkInvalidCh, login, reminder
 	- class Showletter: Toplevel window describing a double-clicked letter
+		^ params: master,sender,subject,message,date
 ...MISSING:
 	^ online version.
 ...Known bugs:
 	^ App showing other mail than the one that was clicked.
+	^ Password reminder
+	^ Long mails
 """
 
 from tkinter import *
@@ -27,7 +33,7 @@ class EmailGui(Frame):
 		A Frame class which let's the successfully logged in user to browse, sort, delete and initiate writing e-mails.
 		NOTE: This frame does not displays itself on it's master upon init.
 			Methods:
-				__init__:
+				__init__ (master, user):
 					- creating, costumizing and showing widgets
 					- loading the user's incoming e-mails
 					- adding bindings
@@ -68,6 +74,7 @@ class EmailGui(Frame):
 		
 
 	def load_mails(self):											#FROMSERVER
+		"Function to load the user's incoming mails."
 		self.mail_treeview.delete(*self.mail_treeview.get_children())
 		self.mail_count=0
 		with open("{0}.txt".format(self.user), 'a') as f:pass
@@ -78,7 +85,7 @@ class EmailGui(Frame):
 			self.mail_treeview.insert("" , self.mail_count, values=(x[0].replace("[kukac]","@"), x[1],x[2], x[3]), text=str(self.mail_count))
 
 	def treeview_sort_column(self,mail_treeview, col, reverse):
-		"function to sort letters when a column is selected to be sorted by - thx stackoverflow"
+		"f(panel: ttk.Treeview, sorting column id, reverse: bool)\nFunction to sort letters when a column is selected to be sorted by - thx stackoverflow"
 		l = [(mail_treeview.set(k, col), k) for k in self.mail_treeview.get_children('')]
 		l.sort(reverse=reverse)
 
@@ -91,7 +98,7 @@ class EmailGui(Frame):
 					self.treeview_sort_column(self.mail_treeview, col, not reverse))
 
 	def treeview_double_click(self,event):								#TOSERVER
-		"function binded to double clicking, detecting which mail was chosen, forwarding it to class ShowLetter"
+		"f(double click:event) Function binded to double clicking, detecting which mail was chosen, forwarding it to class ShowLetter"
 		item = self.mail_treeview.identify('item',event.x,event.y)
 		if self.mail_treeview.item(item,"values"):
 			i = int(self.mail_treeview.item(self.mail_treeview.focus())["text"])
@@ -221,7 +228,7 @@ class WriteLetterDialog(Frame):
 		self.end()
 
 	def checkInvalidCh(self, string_):
-		"checks for invalid chars in username/pass/reminder"			#should probably have used regex here,w/e works fine
+		"f(str) checks for invalid chars in username/pass/reminder"			#should probably have used regex here,w/e works fine
 		for x in string_:
 			if x not in self.validch:
 				return True
@@ -353,6 +360,7 @@ Password length is 8 to 10. Username and password reminder length is 1 to 15."""
 
 
 	def hasher(self,password):				#ONSERVER?
+		"f(pass:str) hashes the password."
 		return sum([ord(x) for x in password + "d" * (10 - len(password))])
 		
 	def checkInvalidCh(self, string_):
@@ -390,7 +398,7 @@ Password length is 8 to 10. Username and password reminder length is 1 to 15."""
 			return
 		else:
 			if len(data[user])==2:
-				messagebox.showinfo('Password reminder', "Your assword reminder is:\n{0}".format(data[user][1]))
+				messagebox.showinfo('Password reminder', "Your password reminder is:\n{0}".format(data[user][1]))
 			else:
 				messagebox.showinfo('Password reminder', "You have no password reminder! :(")
 			return
